@@ -26,7 +26,7 @@ public class HomePage extends WebPage {
 
 		log.info("rendering home page");
 
-		final IMyBean myBean = new MyBean("some data");
+		final IMyBean myBean = new MyBean("valid data");
 
 		IMyBean myBeanProxy = DynamicProxyFactory.newInstance(new InvocationHandler<IMyBean>(myBean) {
 			private long timing;
@@ -34,7 +34,7 @@ public class HomePage extends WebPage {
 			public void onBeforeInvocation(String methodName, Object[] args) {
 				if ("setData".equals(methodName)) {
 					log.info("Executing {} with args {}", methodName, args);
-					if (args.length < 1 || args[0] != "some data")
+					if (args.length < 1 || args[0] != "valid data")
 						throw new InvalidDataException();
 				} else if ("getData".equals(methodName))
 					timing = System.nanoTime();
