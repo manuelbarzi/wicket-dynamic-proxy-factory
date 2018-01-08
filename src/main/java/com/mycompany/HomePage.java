@@ -16,6 +16,8 @@ public class HomePage extends WebPage {
 	private static final long serialVersionUID = 1L;
 
 	private static Logger log = LoggerFactory.getLogger(HomePage.class);
+	
+	private static String INVALID_DATA_SUBMISSION = "Invalid data submitted!";
 
 	public HomePage(final PageParameters parameters) {
 		super(parameters);
@@ -46,11 +48,9 @@ public class HomePage extends WebPage {
 			@Override
 			public void onInvocationError(String methodName, Object[] args, Throwable error) {
 				if (error instanceof InvalidDataException) {
-					String feedback = "Invalid data submitted!";
+					log.error(INVALID_DATA_SUBMISSION);
 
-					log.error(feedback);
-
-					Session.get().getFeedbackMessages().add(new FeedbackMessage(null, feedback, FeedbackMessage.ERROR));
+					Session.get().getFeedbackMessages().add(new FeedbackMessage(null, INVALID_DATA_SUBMISSION, FeedbackMessage.ERROR));
 				}
 			}
 		});
