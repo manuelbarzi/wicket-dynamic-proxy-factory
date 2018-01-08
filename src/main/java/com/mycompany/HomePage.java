@@ -1,7 +1,5 @@
 package com.mycompany;
 
-import java.lang.reflect.Method;
-
 import org.apache.wicket.Session;
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.markup.html.WebPage;
@@ -12,8 +10,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mycompany.DynamicProxyFactory.InvocationHandler;
 
 @SuppressWarnings({ "serial", "rawtypes" })
 public class HomePage extends WebPage {
@@ -28,9 +24,10 @@ public class HomePage extends WebPage {
 
 		final IMyBean myBean = new MyBean("valid data");
 
-		IMyBean myBeanProxy = DynamicProxyFactory.newInstance(new InvocationHandler<IMyBean>(myBean) {
+		IMyBean myBeanProxy = DynamicProxyFactory.newInstance(new ListenerInvocationHandler<IMyBean>(myBean) {
 			private long timing;
 
+			@Override
 			public void onBeforeInvocation(String methodName, Object[] args) {
 				if ("setData".equals(methodName)) {
 					log.info("Executing {} with args {}", methodName, args);
@@ -40,29 +37,20 @@ public class HomePage extends WebPage {
 					timing = System.nanoTime();
 			}
 
-			public void onAfterInvocation(String methodName, Object result) {
+			@Override
+			public void onAfterInvocation(String methodName, Object[] args, Object result) {
 				if ("getData".equals(methodName))
 					log.info("Executing {} finished in {} ns", methodName, System.nanoTime() - timing);
 			}
 
 			@Override
-			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				try {
-					onBeforeInvocation(method.getName(), args);
+			public void onInvocationError(String methodName, Object[] args, Throwable error) {
+				if (error instanceof InvalidDataException) {
+					String feedback = "Invalid data submitted!";
 
-					Object result = super.invoke(proxy, method, args);
+					log.error(feedback);
 
-					onAfterInvocation(method.getName(), result);
-
-					return result;
-				} catch (InvalidDataException e) {
-					String error;
-
-					log.error(error = "Invalid data submitted!");
-
-					Session.get().getFeedbackMessages().add(new FeedbackMessage(null, error, FeedbackMessage.ERROR));
-
-					return myBean.getData();
+					Session.get().getFeedbackMessages().add(new FeedbackMessage(null, feedback, FeedbackMessage.ERROR));
 				}
 			}
 		});
