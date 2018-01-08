@@ -33,6 +33,7 @@ public class HomePage extends WebPage {
 			public void onBeforeInvocation(String methodName, Object[] args) {
 				if ("setData".equals(methodName)) {
 					log.info("Executing {} with args {}", methodName, args);
+					
 					if (args.length < 1 || args[0] != "valid data")
 						throw new InvalidDataException();
 				} else if ("getData".equals(methodName))
